@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Clock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background-color: #fefefe;
+      color: #333;
+      padding: 1rem;
+      max-width: 480px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #ea5548;
+    }
+    .timer-container {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .task-input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+    }
+    .time-display {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .status-text {
+      margin-bottom: 0.5rem;
+      color: #666;
+    }
+    .btn-group button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      margin: 0.5rem 0.25rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .btn-start {
+      background-color: #4caf50;
+      color: #fff;
+    }
+    .btn-stop {
+      background-color: #ea5548;
+      color: #fff;
+    }
+    table {
+      width: 100%;
+      margin-top: 1.5rem;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+      font-size: 0.9rem;
+    }
+    .delete-btn {
+      background-color: #ccc;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+    }
+    .daily-stats {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: #f9f9f9;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .stat-card {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+    @media (min-width: 600px) {
+      body {
+        max-width: 600px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 style="margin-bottom: 0;">
+  <img src="assets/logo.png" alt="Focus Clock Logo"
+    style="height: 6.5em; display: block; margin: 0 auto; object-fit: cover; object-position: center; clip-path: inset(20% 0 20% 0);" />
+  </h1>
+
+  <div class="timer-container">
+    <input id="taskName" class="task-input" type="text" placeholder="輸入這次任務名稱..." />
+    <div class="status-text" id="status">尚未開始</div>
+    <div class="time-display" id="elapsed">00:00</div>
+    <div class="btn-group">
+      <button id="toggleBtn" class="btn-start">開始</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>任務名稱</th>
+        <th>開始時間</th>
+        <th>結束時間</th>
+        <th>時長</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="recordTable"></tbody>
+  </table>
+
+  <div class="daily-stats" id="dailyStats"></div>
+
+  <script>
+    const toggleBtn = document.getElementById('toggleBtn');
+    const statusText = document.getElementById('status');
+    const elapsedDisplay = document.getElementById('elapsed');
+    const taskInput = document.getElementById('taskName');
+    const recordTable = document.getElementById('recordTable');
+    const dailyStats = document.getElementById('dailyStats');
+
+    let startTime = null;
+    let timerInterval = null;
+    let isRunning = false;
+    let records = JSON.parse(localStorage.getItem('records') || '[]');
+
+    function formatTime(date) {
+      return date.toTimeString().slice(0, 8);
+    }
+
+    function formatDuration(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const min = Math.floor(totalSec / 60);
+      const sec = totalSec % 60;
+      return `${min} 分 ${sec} 秒`;
+    }
+
+    function updateTable() {
+      recordTable.innerHTML = '';
+      const today = new Date().toISOString().slice(0, 10);
+      const todayRecords = records.filter(r => r.start.slice(0, 10) === today);
+
+      todayRecords.forEach((r, i) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${r.task}</td>
+          <td>${formatTime(new Date(r.start))}</td>
+          <td>${formatTime(new Date(r.end))}</td>
+          <td>${formatDuration(new Date(r.end) - new Date(r.start))}</td>
+          <td><button class="delete-btn" data-index="${records.indexOf(r)}">刪除</button></td>
+        `;
+        recordTable.appendChild(row);
+      });
+
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = e.target.getAttribute('data-index');
+          records.splice(index, 1);
+          localStorage.setItem('records', JSON.stringify(records));
+          updateTable();
+        });
+      });
+
+      const totalDuration = todayRecords.reduce((sum, r) => sum + (new Date(r.end) - new Date(r.start)), 0);
+      const maxDuration = todayRecords.reduce((max, r) => {
+        const d = new Date(r.end) - new Date(r.start);
+        return Math.max(max, d);
+      }, 0);
+
+      dailyStats.innerHTML = `
+        <div class="stat-card"><span>今日完成次數</span><span>${todayRecords.length} 次</span></div>
+        <div class="stat-card"><span>總專注時間</span><span>${formatDuration(totalDuration)}</span></div>
+        <div class="stat-card"><span>最長一次</span><span>${formatDuration(maxDuration)}</span></div>
+      `;
+    }
+
+    function updateElapsed() {
+      const diff = new Date() - startTime;
+      const min = String(Math.floor(diff / 60000)).padStart(2, '0');
+      const sec = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      elapsedDisplay.textContent = `${min}:${sec}`;
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      if (!isRunning) {
+        const task = taskInput.value.trim();
+        if (!task) return alert('請輸入任務名稱');
+        startTime = new Date();
+        isRunning = true;
+        toggleBtn.textContent = '結束';
+        toggleBtn.classList.remove('btn-start');
+        toggleBtn.classList.add('btn-stop');
+        taskInput.disabled = true;
+        statusText.textContent = '正在計時中...';
+        timerInterval = setInterval(updateElapsed, 1000);
+      } else {
+        const endTime = new Date();
+        clearInterval(timerInterval);
+        isRunning = false;
+        toggleBtn.textContent = '開始';
+        toggleBtn.classList.remove('btn-stop');
+        toggleBtn.classList.add('btn-start');
+        taskInput.disabled = false;
+        statusText.textContent = '尚未開始';
+        elapsedDisplay.textContent = '00:00';
+        records.push({
+          task: taskInput.value.trim(),
+          start: startTime.toISOString(),
+          end: endTime.toISOString()
+        });
+        localStorage.setItem('records', JSON.stringify(records));
+        updateTable();
+      }
+    });
+
+    updateTable();
+  </script>
+</body>
+</html>
