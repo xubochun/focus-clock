@@ -17,5 +17,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.getElementById('viewAllBtn').addEventListener('click', () => {
-  window.location.href = 'history.html'
+  window.location.href = 'history.html';
 });

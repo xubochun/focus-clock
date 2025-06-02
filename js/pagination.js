@@ -1,4 +1,9 @@
-export function renderPagination(totalItems, itemsPerPage, currentPage, onPageChange) {
+export function renderPagination(
+  totalItems,
+  itemsPerPage,
+  currentPage,
+  onPageChange
+) {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const pagination = document.getElementById('pagination');
   pagination.innerHTML = '';

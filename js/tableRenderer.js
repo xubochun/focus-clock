@@ -40,10 +40,15 @@ export function updateTable() {
     });
   });
 
-  renderPagination(todayRecords.length, itemsPerPage, currentPage, (newPage) => {
-    currentPage = newPage;
-    updateTable();
-  });
+  renderPagination(
+    todayRecords.length,
+    itemsPerPage,
+    currentPage,
+    (newPage) => {
+      currentPage = newPage;
+      updateTable();
+    }
+  );
 
   const totalDuration = todayRecords.reduce(
     (sum, r) => sum + (new Date(r.end) - new Date(r.start)),

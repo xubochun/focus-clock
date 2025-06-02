@@ -40,7 +40,7 @@ export function stopTimer() {
     task: taskInput.value.trim(),
     category: window.selectedCategory || '未分類',
     start: startTime.toISOString(),
-    end: endTime.toISOString(),
+    end: endTime.toISOString()
   });
 
   updateTable();
