@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>所有紀錄 - Focus Clock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1 style="margin-bottom: 1rem; overflow: hidden">
+    <img
+      src="assets/logo.png"
+      alt="Focus Clock Logo"
+      style="height: 3.5em; display: block; margin: 0 auto"
+    />
+  </h1>
+
+  <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+  <h2 style="margin: 0;">所有紀錄</h2>
+  <div style="display: flex; gap: 0.5rem;">
+    <button onclick="window.location.href='index.html'" class="btn-secondary">👈 回首頁</button>
+    <button id="clearAllBtn" class="btn-danger">🗑️ 清除全部</button>
+  </div>
+</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>任務名稱</th>
+        <th>分類</th>
+        <th>開始時間</th>
+        <th>結束時間</th>
+        <th>時長</th>
+      </tr>
+    </thead>
+    <tbody id="allRecordsTable"></tbody>
+  </table>
+
+  <div class="pagination" id="pagination"></div>
+
+  <script type="module" src="js/history.js"></script>
+</body>
+</html>
